@@ -2,6 +2,8 @@
 #include "../h/tcb.hpp"
 #include "../h/print.hpp"
 #include "../h/workers.hpp"
+#include "../h/riscv.hpp"
+
 /*#include "../lib/console.h" //tekuci u src pa zato ../
 
 void main(){
@@ -34,23 +36,31 @@ void main(){
 
 
 int main(){
-    TCB * coroutines[3];
+    TCB * threads[5];
 
-    coroutines[0] = TCB::createCoroutine(nullptr);
-    TCB::running = coroutines[0];
+    threads[0] = TCB::createThread(nullptr);
+    TCB::running = threads[0];
 
-    coroutines[1] = TCB::createCoroutine(workerBodyA);
-    printString("CoroutineA created\n");
-    coroutines[2] = TCB::createCoroutine(workerBodyB);
-    printString("CoroutineB created\n");
+    threads[1] = TCB::createThread(workerBodyA);
+    printString("threadA created\n");//u ovim funkcijama zabraniti prekide da ne bi na pola stao ispis
+    threads[2] = TCB::createThread(workerBodyB);
+    printString("threadB created\n");
+    threads[3] = TCB::createThread(workerBodyC);
+    printString("threadC created\n");
+    threads[4] = TCB::createThread(workerBodyD);
+    printString("threadD created\n");
 
-    while (!(coroutines[1]->isFinished() && coroutines[2]->isFinished())){
+    Riscv::w_stvec((uint64) &Riscv::supervisorTrap);//adresa prekidne rutine u stvec
+    Riscv::ms_sstatus(Riscv::SSTATUS_SIE);//da prekidi u supervisor modu budu prihvaceni
+
+    while (!(threads[1]->isFinished() && threads[2]->isFinished()
+        && threads[3]->isFinished() && threads[4]->isFinished())){
         TCB::yield();
     }//treba u while jer kada main pozove yield ubacujemo ga u sch
     //onda moze da se desi da opet njega izaberemo i da nikad ne izvrsimo bodyA i B
 
-    for (auto &coroutine : coroutines){
-        delete coroutine;
+    for (auto &thread : threads){
+        delete thread;
     }
     printString("Finished\n");
 

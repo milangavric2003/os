@@ -17,20 +17,25 @@ public:
     bool isFinished() const { return finished; }
     void setFinished(bool finished) { TCB::finished = finished; }
 
+    uint64 getTimeSlice() const {
+        return timeSlice;
+    }
+
     using Body = void (*)();
 
-    static TCB *createCoroutine(Body body);
+    static TCB *createThread(Body body);
 
     static void yield();
 
     static TCB *running;
 
 private:
-    TCB(Body body) : body(body), stack(body != nullptr ? new uint64[STACK_SIZE] : nullptr),
+    TCB(Body body, uint64 timeSlice) : body(body), stack(body != nullptr ? new uint64[STACK_SIZE] : nullptr),
         context({
-            body != nullptr ? (uint64) body : 0,
+            body != nullptr ? (uint64) &threadWrapper : 0,
             stack != nullptr ? (uint64) &stack[STACK_SIZE] : 0
         }),
+        timeSlice(timeSlice),
         finished(false){
         if (body != nullptr) Scheduler::put(this); //ako body = nullptr onda je to main korutina, ne treba je u sch
     }
@@ -42,13 +47,21 @@ private:
     Body body;
     uint64 *stack;
     Context context;
+    uint64 timeSlice;
     bool finished;
+
+    friend class Riscv;
+
+    static void threadWrapper();//treba nam jer na kraju body-a nema set finished
 
     static void contextSwitch(Context *oldContext, Context *runningContext);
 
     static void dispatch();
 
+    static uint64 timeSliceCounter;
+
     static uint64 constexpr STACK_SIZE = 1024;
+    static uint64 constexpr TIME_SLICE = 2;
 };
 
 

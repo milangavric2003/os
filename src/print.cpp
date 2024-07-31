@@ -1,16 +1,24 @@
 #include "../h/print.hpp"
 #include "../lib/console.h"
+#include "../h/riscv.hpp"
 
 void printString(char const *string)
 {
+    uint64 sstatus = Riscv::r_sstatus();//da onemogucimo prekide dok se ispisuje
+    Riscv::mc_sstatus(Riscv::SSTATUS_SIE);
+
     while (*string != '\0'){
         __putc(*string);
         string++;
     }
 
+    Riscv::ms_sstatus(sstatus & Riscv::SSTATUS_SIE ? Riscv::SSTATUS_SIE : 0);//omoguci prekide
 }
 
 void printInteger (uint64 integer) {
+    uint64 sstatus = Riscv::r_sstatus();//da onemogucimo prekide dok se ispisuje
+    Riscv::mc_sstatus(Riscv::SSTATUS_SIE);
+
     static char digits[] = "0123456789";
     char buf[16];
     int i, neg;
@@ -35,4 +43,5 @@ void printInteger (uint64 integer) {
     while (--i >= 0)
         __putc(buf[i]);
 
+    Riscv::ms_sstatus(sstatus & Riscv::SSTATUS_SIE ? Riscv::SSTATUS_SIE : 0);//omoguci prekide
 }
