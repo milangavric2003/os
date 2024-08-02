@@ -2,6 +2,7 @@
 #include "../h/riscv.hpp"
 #include "../lib/console.h"
 #include "../h/tcb.hpp"
+#include "../h/print.hpp"
 
 
 void Riscv::popSppSpie() {
@@ -35,7 +36,7 @@ void Riscv::handleSupervisorTrap(){
             uint64 sepc = r_sepc();//sepc stare niti
             uint64 sstatus = r_sstatus();
             TCB::timeSliceCounter = 0;
-
+            printString("uso u timer rutinu\n");
             TCB::dispatch();//racunamo da niti ovde izlaze kada se izvrsi dispatch (sve su na ovaj nacin sacuvane)
                             //a sta cemo za novo-napravljene niti
             w_sstatus(sstatus);

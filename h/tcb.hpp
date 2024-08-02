@@ -30,10 +30,10 @@ public:
     static TCB *running;
 
 private:
-    TCB(Body body, uint64 timeSlice) : body(body), stack(body != nullptr ? new uint64[STACK_SIZE] : nullptr),
+    TCB(Body body, uint64 timeSlice) : body(body), stack(body != nullptr ? new uint8[DEFAULT_STACK_SIZE] : nullptr),
         context({
             body != nullptr ? (uint64) &threadWrapper : 0,
-            stack != nullptr ? (uint64) &stack[STACK_SIZE] : 0
+            stack != nullptr ? (uint64) &stack[DEFAULT_STACK_SIZE] : 0
         }),
         timeSlice(timeSlice),
         finished(false){
@@ -45,7 +45,7 @@ private:
         uint64 sp;
     };
     Body body;
-    uint64 *stack;
+    uint8 *stack;
     Context context;
     uint64 timeSlice;
     bool finished;
@@ -60,8 +60,8 @@ private:
 
     static uint64 timeSliceCounter;
 
-    static uint64 constexpr STACK_SIZE = 1024;
-    static uint64 constexpr TIME_SLICE = 2;
+    //static uint64 constexpr DEFAULT_STACK_SIZE = 1024; 4096
+    //static uint64 constexpr DEFAULT_TIME_SLICE = 2;
 };
 
 

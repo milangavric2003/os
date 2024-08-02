@@ -35,7 +35,7 @@ void TCB::dispatch() {
 }
 
 TCB *TCB::createThread(TCB::Body body){
-    return new TCB(body, TIME_SLICE);
+    return new TCB(body, DEFAULT_TIME_SLICE);
 }
 
 void TCB::threadWrapper() {
