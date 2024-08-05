@@ -1,6 +1,8 @@
 #ifndef PROJECT_BASE_V1_1_LIST_HPP
 #define PROJECT_BASE_V1_1_LIST_HPP
 
+#include "print.hpp"
+
 template<typename T>
 class List {
         private:
@@ -19,6 +21,16 @@ class List {
         List(const List<T> &) = delete;
 
         List<T> &operator=(const List<T> &) = delete;
+        /*
+        ~List(){
+            while (head) {
+                printString("nije sve bilo izbaceno iz liste\n");
+                Elem *next = head->next;
+                delete head;
+                head = next;
+            }
+            tail = nullptr;
+        }*/
 
         void addFirst(T *data){
             Elem *elem = new Elem(data, head);
@@ -73,6 +85,37 @@ class List {
         T *peekLast(){
             if (!tail) return 0;
             return tail->data;
+        }
+
+        T* remove (T* toBeRemoved){
+            if (!head) return nullptr; // List is empty
+
+            Elem *prev = nullptr;
+            Elem *curr = head;
+
+            while (curr != nullptr) {
+                if (*(curr->data) == *(toBeRemoved)) {
+                    // Element found, remove it
+                    if (prev) {
+                        prev->next = curr->next;
+                    } else {
+                        head = curr->next; // Removing the head element
+                    }
+
+                    if (curr == tail) {
+                        tail = prev; // Update tail if necessary
+                    }
+
+                    T *ret = curr->data;
+                    delete curr;
+                    return ret;
+                }
+
+                prev = curr;
+                curr = curr->next;
+            }
+
+            return nullptr; // Element not found
         }
 
 };
