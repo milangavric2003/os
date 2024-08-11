@@ -2,7 +2,7 @@
 #include "../h/tcb.hpp"
 #include "../h/print.hpp"
 
-void workerBodyA(){
+void workerBodyA(void *arg){
     for (uint64 i = 0; i < 10; i++){
         printString("A: i=");
         printInteger(i);
@@ -16,7 +16,7 @@ void workerBodyA(){
     }//nema koda da se ova rutina zavrsila - to mi implementiramo
 }
 
-void workerBodyB(){
+void workerBodyB(void *arg){
     for (uint64 i = 0; i < 16; i++){
         printString("B: i=");
         printInteger(i);
@@ -37,7 +37,7 @@ static uint64 fibonacci(uint64 n)
     return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
-void workerBodyC() {
+void workerBodyC(void *arg) {
     uint64 i = 0;
 
     for (; i < 3; i++) {
@@ -69,11 +69,11 @@ void workerBodyC() {
         printString("\n");
     }
 
-    TCB::running->setFinished(true);
-    TCB::yield();
+    //TCB::running->setFinished(true);
+    //TCB::yield();
 }
 
-void workerBodyD()
+void workerBodyD(void *arg)
 {
     uint64 i = 10;
     for (; i < 13; i++)
@@ -88,7 +88,7 @@ void workerBodyD()
     TCB::yield();
 
     uint64 result = fibonacci(23);
-    printString("A: fibonaci=");
+    printString("D: fibonaci=");
     printInteger(result);
     printString("\n");
 
@@ -99,6 +99,6 @@ void workerBodyD()
         printString("\n");
     }
 
-    TCB::running->setFinished(true);
-    TCB::yield();
+    //TCB::running->setFinished(true);
+    //TCB::yield();
 }

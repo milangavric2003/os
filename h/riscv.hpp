@@ -2,10 +2,18 @@
 #define PROJECT_BASE_V1_1_RISCV_HPP
 
 #include "../lib/hw.h"
+#include "../h/syscall_c.hpp"
 
 class Riscv
 {
 public:
+
+    //exit running thread
+    static int thread_exit();
+
+    //create thread
+    static int thread_create (thread_t* handle, void(*start_routine)(void*),
+                              void* arg, void* stack_space);
 
     //pop sstatus.spp i sstatus.spie bits (has to be a non inline function)
     static void popSppSpie();
@@ -87,6 +95,35 @@ private:
     static void handleSupervisorTrap();
 
 };
+
+inline int Riscv::thread_exit (){
+    __asm__ volatile ("mv a0, %[THREAD_EXIT_CODE]" : : [THREAD_EXIT_CODE] "r"(THREAD_EXIT_CODE));
+    // a0 <= THREAD_EXIT_CODE
+
+    __asm__ volatile ("ecall"); // ovo vodi u prekidnu rutinu
+
+    int result;
+    __asm__ volatile ("mv %[result], a0" : [result] "=r"(result)); // result <= a0
+
+    return result;
+}
+
+inline int Riscv::thread_create (thread_t* handle, void(*start_routine)(void*),
+                          void* arg, void* stack_space){
+    __asm__ volatile ("mv a1, %[handle]" : : [handle] "r"(handle)); // a1 <= handle
+    __asm__ volatile ("mv a2, %[start_routine]" : : [start_routine] "r"(start_routine)); // a2 <= start_routine
+    __asm__ volatile ("mv a3, %[arg]" : : [arg] "r"(arg)); // a3 <= arg
+    __asm__ volatile ("mv a4, %[stack_space]" : : [stack_space] "r"(stack_space)); // a4 <= stack_space
+    __asm__ volatile ("mv a0, %[THREAD_CREATE_CODE]" : : [THREAD_CREATE_CODE] "r"(THREAD_CREATE_CODE));
+    // a0 <= THREAD_CREATE_CODE
+
+    __asm__ volatile ("ecall"); // ovo vodi u prekidnu rutinu
+
+    int result;
+    __asm__ volatile ("mv %[result], a0" : [result] "=r"(result)); // result <= a0
+
+    return result;
+}
 
 inline uint64 Riscv::r_scause()
 {

@@ -21,22 +21,25 @@ public:
         return timeSlice;
     }
 
-    using Body = void (*)();
+    using Body = void (*)(void*);
 
-    static TCB *createThread(Body body);
+    static int createThread(TCB** handle, Body body, void* arg, void* stack_space);
 
     static void yield();
+
+    static int thread_exit();
 
     static TCB *running;
 
 private:
-    TCB(Body body, uint64 timeSlice) : body(body), stack(body != nullptr ? new uint8[DEFAULT_STACK_SIZE] : nullptr),
+    TCB(TCB** handle, Body body, void* arg, void *stack_space, uint64 timeSlice) :
+        handle (handle), arg(arg), body(body), stack(body != nullptr ? (uint8*)stack_space : nullptr),
         context({
             body != nullptr ? (uint64) &threadWrapper : 0,
             stack != nullptr ? (uint64) &stack[DEFAULT_STACK_SIZE] : 0
         }),
-        timeSlice(timeSlice),
-        finished(false){
+        timeSlice(timeSlice), finished(false){
+
         if (body != nullptr) Scheduler::put(this); //ako body = nullptr onda je to main korutina, ne treba je u sch
     }
     struct Context{
@@ -44,6 +47,8 @@ private:
         uint64 ra;
         uint64 sp;
     };
+    TCB** handle;
+    void* arg;
     Body body;
     uint8 *stack;
     Context context;

@@ -20,6 +20,8 @@ void TCB::yield() {
 
     Riscv::popRegisters();*///ne treba jer vise ne menjamo kontekst na ovaj nacin
 
+    __asm__ volatile ("mv a0, %[THREAD_DISPATCH_CODE]" : : [THREAD_DISPATCH_CODE] "r"(THREAD_DISPATCH_CODE));
+    // a0 <= THREAD_CREATE_CODE
     __asm__ volatile ("ecall");//ovo vodi u prekidnu rutinu
 }
 
@@ -31,18 +33,26 @@ void TCB::dispatch() {
     running = Scheduler::get();
 
     TCB::contextSwitch(&old->context, &running->context);
-
+    // ovde se ne dolazi ako novoizabrana nit -> ona krece sa threadWprapper
 }
 
-TCB *TCB::createThread(TCB::Body body){
-    return new TCB(body, DEFAULT_TIME_SLICE);
+int TCB::createThread(TCB** handle, Body body, void* arg, void* stack_space){
+    if ((*handle = new TCB(handle, body, arg, stack_space, DEFAULT_TIME_SLICE)) == nullptr) {
+        return -1;
+    } else return 0;
 }
 
 void TCB::threadWrapper() {
     //ovde bismo trebali da kazemo da izlazimo iz privilegovanog rezima iako smo jos uvek u kodu prekidne rutine
     //spie i spp treba da vrati na stanje pre ulaska u prek. rutinu
-    Riscv::popSppSpie();
-    running->body();
+    Riscv::popSppSpie(); // jer ova nit u ovom trenutku nije usla u prekid vec je samo izabrana
+    running->body(running->arg);
     running->setFinished(true);
     TCB::yield();
+}
+
+int TCB::thread_exit() {
+    running->setFinished(true);
+    //yield
+    return 0;
 }

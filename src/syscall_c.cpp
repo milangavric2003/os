@@ -1,4 +1,5 @@
 #include "../h/syscall_c.hpp"
+#include "../h/riscv.hpp"
 
 void* mem_alloc (size_t size){
     size = (size + MEM_BLOCK_SIZE - 1 ) / MEM_BLOCK_SIZE;
@@ -25,4 +26,24 @@ int mem_free(void* ptr){
 
     return result;
 }
+
+int thread_create (thread_t* handle, void(*start_routine)(void*), void* arg){
+    void* stack_space = mem_alloc(DEFAULT_STACK_SIZE);
+    if (!stack_space) return -1; // mem_alloc error
+    return Riscv::thread_create(handle, start_routine, arg, stack_space);
+}
+
+extern int thread_exit(){
+    int status = Riscv::thread_exit();
+    if (status == 0)
+        TCB::yield(); //valjda nmp ovo treba da se pozove nmp
+    return status;
+}
+
+extern void thread_dispatch(){
+    TCB::yield();
+}
+
+
+
 
