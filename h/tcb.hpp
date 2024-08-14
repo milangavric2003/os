@@ -32,7 +32,7 @@ public:
     static TCB *running;
 
 private:
-    TCB(TCB** handle, Body body, void* arg, void *stack_space, uint64 timeSlice) :
+    explicit TCB(TCB** handle, Body body, void* arg, void *stack_space, uint64 timeSlice) :
         handle (handle), arg(arg), body(body), stack(body != nullptr ? (uint8*)stack_space : nullptr),
         context({
             body != nullptr ? (uint64) &threadWrapper : 0,
@@ -56,6 +56,7 @@ private:
     bool finished;
 
     friend class Riscv;
+    friend class Semaphore;
 
     static void threadWrapper();//treba nam jer na kraju body-a nema set finished
 

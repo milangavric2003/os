@@ -53,6 +53,5 @@ void TCB::threadWrapper() {
 
 int TCB::thread_exit() {
     running->setFinished(true);
-    //yield
     return 0;
 }

@@ -110,10 +110,10 @@ inline int Riscv::thread_exit (){
 
 inline int Riscv::thread_create (thread_t* handle, void(*start_routine)(void*),
                           void* arg, void* stack_space){
-    __asm__ volatile ("mv a1, %[handle]" : : [handle] "r"(handle)); // a1 <= handle
-    __asm__ volatile ("mv a2, %[start_routine]" : : [start_routine] "r"(start_routine)); // a2 <= start_routine
-    __asm__ volatile ("mv a3, %[arg]" : : [arg] "r"(arg)); // a3 <= arg
     __asm__ volatile ("mv a4, %[stack_space]" : : [stack_space] "r"(stack_space)); // a4 <= stack_space
+    __asm__ volatile ("mv a3, %[arg]" : : [arg] "r"(arg)); // a3 <= arg
+    __asm__ volatile ("mv a2, %[start_routine]" : : [start_routine] "r"(start_routine)); // a2 <= start_routine
+    __asm__ volatile ("mv a1, %[handle]" : : [handle] "r"(handle)); // a1 <= handle
     __asm__ volatile ("mv a0, %[THREAD_CREATE_CODE]" : : [THREAD_CREATE_CODE] "r"(THREAD_CREATE_CODE));
     // a0 <= THREAD_CREATE_CODE
 

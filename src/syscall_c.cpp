@@ -28,22 +28,75 @@ int mem_free(void* ptr){
 }
 
 int thread_create (thread_t* handle, void(*start_routine)(void*), void* arg){
+    if (handle == nullptr) return -2; // handle is nullptr
     void* stack_space = mem_alloc(DEFAULT_STACK_SIZE);
     if (!stack_space) return -1; // mem_alloc error
     return Riscv::thread_create(handle, start_routine, arg, stack_space);
 }
 
-extern int thread_exit(){
+int thread_exit(){
     int status = Riscv::thread_exit();
     if (status == 0)
         TCB::yield(); //valjda nmp ovo treba da se pozove nmp
     return status;
 }
 
-extern void thread_dispatch(){
+void thread_dispatch(){
     TCB::yield();
 }
 
+int sem_open (sem_t* handle, unsigned init) {
+    if (handle == nullptr) return -2; // handle is nullptr
+    __asm__ volatile ("mv a2, %[init]" : : [init] "r"(init)); // a2 <= init
+    __asm__ volatile ("mv a1, %[handle]" : : [handle] "r"(handle)); // a1 <= handle
+    __asm__ volatile ("mv a0, %[SEM_OPEN_CODE]" : : [SEM_OPEN_CODE] "r"(SEM_OPEN_CODE)); // a0 <= SEM_OPEN_CODE
+
+    __asm__ volatile ("ecall"); // ovo vodi u prekidnu rutinu
+
+    int result;
+    __asm__ volatile ("mv %[result], a0" : [result] "=r"(result)); // result <= a0
+
+    return result;
+}
+
+int sem_close (sem_t id) {
+    if (id == nullptr) return -2; // handle is nullptr
+    __asm__ volatile ("mv a1, %[id]" : : [id] "r"(id)); // a1 <= id
+    __asm__ volatile ("mv a0, %[SEM_CLOSE_CODE]" : : [SEM_CLOSE_CODE] "r"(SEM_CLOSE_CODE)); // a0 <= SEM_CLOSE_CODE
+
+    __asm__ volatile ("ecall"); // ovo vodi u prekidnu rutinu
+
+    int result;
+    __asm__ volatile ("mv %[result], a0" : [result] "=r"(result)); // result <= a0
+
+    return result;
+}
+
+int sem_wait (sem_t id) {
+    if (id == nullptr) return -2; // handle is nullptr
+    __asm__ volatile ("mv a1, %[id]" : : [id] "r"(id)); // a1 <= id
+    __asm__ volatile ("mv a0, %[SEM_WAIT_CODE]" : : [SEM_WAIT_CODE] "r"(SEM_WAIT_CODE)); // a0 <= SEM_WAIT_CODE
+
+    __asm__ volatile ("ecall"); // ovo vodi u prekidnu rutinu
+
+    int result;
+    __asm__ volatile ("mv %[result], a0" : [result] "=r"(result)); // result <= a0
+
+    return result;
+}
+
+int sem_signal (sem_t id) {
+    if (id == nullptr) return -2; // handle is nullptr
+    __asm__ volatile ("mv a1, %[id]" : : [id] "r"(id)); // a1 <= id
+    __asm__ volatile ("mv a0, %[SEM_SIGNAL_CODE]" : : [SEM_SIGNAL_CODE] "r"(SEM_SIGNAL_CODE)); // a0 <= SEM_SIGNAL_CODE
+
+    __asm__ volatile ("ecall"); // ovo vodi u prekidnu rutinu
+
+    int result;
+    __asm__ volatile ("mv %[result], a0" : [result] "=r"(result)); // result <= a0
+
+    return result;
+}
 
 
 

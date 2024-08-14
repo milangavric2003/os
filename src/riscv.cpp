@@ -61,6 +61,45 @@ void Riscv::handleSupervisorTrap(){
                 TCB::dispatch();//racunamo da niti ovde izlaze kada se izvrsi dispatch (sve su na ovaj nacin sacuvane)
                 //a sta cemo za novo-napravljene niti
                 break;
+            case SEM_OPEN_CODE:
+                sem_t *id;
+                __asm__ volatile ("mv %[id], a1" : [id] "=r"(id));
+                unsigned init;
+                __asm__ volatile ("mv %[init], a2" : [init] "=r"(init));
+
+                if ((*id = new Semaphore(init)) == nullptr) {
+                    __asm__ volatile ("li a0, -1"); // greska sa alokacijom
+                } else {
+                    __asm__ volatile ("li a0, 0");
+                }
+                __asm__ volatile ("sd a0, 10 * 8(fp)"); // a0 na stek, tamo gde je i sacuvano
+                break;
+            case SEM_CLOSE_CODE:
+                sem_t idClose;
+                __asm__ volatile ("mv %[idClose], a1" : [idClose] "=r"(idClose));
+
+                /*if ((delete idClose)) { // GRESKA SA DEALOKACIJOM (kad budes menjo new i delete) (moze jos greska ukoliko handle nije postojeci
+                    __asm__ volatile ("li a0, -1"); // greska sa alokacijom
+                } else {
+                    __asm__ volatile ("li a0, 0");
+                }*/
+                delete idClose;
+                __asm__ volatile ("sd a0, 10 * 8(fp)"); // a0 na stek, tamo gde je i sacuvano
+                break;
+            case SEM_WAIT_CODE:
+                sem_t idWait;
+                __asm__ volatile ("mv %[idWait], a1" : [idWait] "=r"(idWait));
+
+                idWait->wait();
+                __asm__ volatile ("sd a0, 10 * 8(fp)"); // a0 na stek, tamo gde je i sacuvano
+                break;
+            case SEM_SIGNAL_CODE:
+                sem_t idSignal;
+                __asm__ volatile ("mv %[idSignal], a1" : [idSignal] "=r"(idSignal));
+
+                idSignal->signal();
+                __asm__ volatile ("sd a0, 10 * 8(fp)"); // a0 na stek, tamo gde je i sacuvano
+                break;
             default:
                 break;
         }
@@ -74,7 +113,6 @@ void Riscv::handleSupervisorTrap(){
             uint64 sepc = r_sepc();//sepc stare niti
             uint64 sstatus = r_sstatus();
             TCB::timeSliceCounter = 0;
-            printString("uso u timer rutinu\n");
             TCB::dispatch();//racunamo da niti ovde izlaze kada se izvrsi dispatch (sve su na ovaj nacin sacuvane)
                             //a sta cemo za novo-napravljene niti
             w_sstatus(sstatus);
