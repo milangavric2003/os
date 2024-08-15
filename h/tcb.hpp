@@ -7,10 +7,19 @@
 
 #include "../lib/hw.h"
 #include "scheduler.hpp"
+#include "MemoryAllocator.hpp"
 
 //Thread Control Block
 class TCB {
 public:
+
+    void* operator new(size_t size) {
+        return MemoryAllocator::mem_alloc(size);
+    }
+
+    void operator delete(void* ptr) {
+        MemoryAllocator::mem_free(ptr);
+    }
 
     ~TCB() { delete[] stack; }
 

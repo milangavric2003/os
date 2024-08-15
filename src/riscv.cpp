@@ -67,7 +67,7 @@ void Riscv::handleSupervisorTrap(){
                 unsigned init;
                 __asm__ volatile ("mv %[init], a2" : [init] "=r"(init));
 
-                if ((*id = new Semaphore(init)) == nullptr) {
+                if ((*id = new Semaphore(init)) == nullptr) { //nece moci ovako
                     __asm__ volatile ("li a0, -1"); // greska sa alokacijom
                 } else {
                     __asm__ volatile ("li a0, 0");

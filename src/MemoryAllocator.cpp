@@ -1,15 +1,15 @@
 #include "../h/MemoryAllocator.hpp"
 
-List<uint8> MemoryAllocator::allocatedAddresses;
+BlockHeader* MemoryAllocator::allocatedMemHead = nullptr;
 
-MemoryAllocator* MemoryAllocator::instance = nullptr;
+bool MemoryAllocator::instance = false;
 
 BlockHeader* MemoryAllocator::freeMemHead = nullptr;
 
 void* MemoryAllocator::mem_alloc (size_t size){
 
     if (size == 0) return nullptr;
-    if (instance == nullptr) instance = new MemoryAllocator();
+    if (!instance) initialize();
 
     // Try to find an existing free block in the list (first fit):
     BlockHeader* blk = freeMemHead;
@@ -36,30 +36,22 @@ void* MemoryAllocator::mem_alloc (size_t size){
     } else {
         // No remaining fragment, allocate the entire block
         if (prev) prev->next = blk->next;
-        else { freeMemHead = blk->next;
-            /*if (blk->next) {
-                // freeMemHead is never nullptr
-                freeMemHead = blk->next;
-            } else {
-                // No memory at all
-                freeMemHead = (BlockHeader*) ((uint8*)blk + Block_Header_Size + blk->size);
-                freeMemHead->next = nullptr;
-                freeMemHead->size = 0;
-            }*/
-        }
+        else freeMemHead = blk->next;
     }
     blk->next = nullptr;
 
-    // Added because only memory allocated with mem_alloc can be freed with mem_free:
-    allocatedAddresses.addFirst((uint8*)blk + Block_Header_Size);
+    // Add the block to the allocated list
+    blk->next = allocatedMemHead;
+    allocatedMemHead = blk;
 
     return (uint8*)blk + Block_Header_Size;
 }
 
-MemoryAllocator::MemoryAllocator(){
+void MemoryAllocator::initialize() {
     freeMemHead = (BlockHeader*)HEAP_START_ADDR;
     freeMemHead->next = nullptr;
     freeMemHead->size = (size_t)HEAP_END_ADDR - (size_t)HEAP_START_ADDR - Block_Header_Size; // in bytes
+    instance = true;
 }
 
 // Helper: Try to join cur with the cur->next free segment:
@@ -78,17 +70,30 @@ int MemoryAllocator::mem_free(void* addr_void) {
 
     if (addr_void == nullptr) return -2; // Can't free memory from nullptr
 
-    // Was it allocate with mem_alloc?
-    if (allocatedAddresses.remove((uint8*)addr_void) == nullptr)
-        return -1; // Not firstly allocated with mem_alloc
-
     // Initialize variables addr and size:
     uint8* addr = (uint8*)addr_void - Block_Header_Size; // addr points on BlockHeader
     size_t size = ((BlockHeader*)(addr))->size; // size of free block without BlockHeader
+    BlockHeader* blk = (BlockHeader*)addr;
+
+    // Check if the block is in the allocated list
+    BlockHeader* prev = nullptr;
+    BlockHeader* cur = allocatedMemHead;
+    while (cur != nullptr && cur != blk) {
+        prev = cur;
+        cur = cur->next;
+    }
+
+    if (cur == nullptr) return -1; // Not already allocated with mem_alloc
+
+    // Remove the block from the allocated list
+    if (prev != nullptr) {
+        prev->next = cur->next;
+    } else {
+        allocatedMemHead = cur->next;
+    }
 
     // Find the place where to insert the new free segment (just after cur).
-    BlockHeader* cur = nullptr;
-    BlockHeader* prev = nullptr;
+    prev = nullptr;
     BlockHeader* newSeg = nullptr;
 
     if (!freeMemHead || addr < (uint8*)freeMemHead) {

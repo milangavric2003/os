@@ -1,50 +1,57 @@
-
-
-#include "../h/print.hpp"
+#include "../lib/hw.h"
+#include "../lib/console.h"
 #include "../h/syscall_c.hpp"
 #include "../h/riscv.hpp"
-#include "../lib/console.h"
-#include "../h/workers.hpp"
 
-
-int main(){
-
-    Riscv::w_stvec((uint64) &Riscv::supervisorTrap);//adresa prekidne rutine u stvec
-    void* arg = nullptr;
-    thread_t* handlemain = new (thread_t);
-    thread_create(handlemain, nullptr, arg);
-    TCB::running = *handlemain;
-
-    thread_t* handleA = new (thread_t);
-    thread_t* handleB = new (thread_t);
-    thread_t* handleC = new (thread_t);
-    thread_t* handleD = new (thread_t);
-    thread_t* threads[5] = {handlemain, handleA, handleB, handleC, handleD};
-
-    thread_create(handleA, workerBodyA, arg);
-    printString("threadA created\n");//u ovim funkcijama zabraniti prekide da ne bi na pola stao ispis
-    thread_create(handleB, workerBodyB, arg);
-    printString("threadB created\n");
-    thread_create(handleC, workerBodyC, arg);
-    printString("threadC created\n");
-    thread_create(handleD, workerBodyD, arg);
-    printString("threadD created\n");
-
-    Riscv::ms_sstatus(Riscv::SSTATUS_SIE);//da prekidi u supervisor modu budu prihvaceni
-
-    while (!((*threads[1])->isFinished() && (*threads[2])->isFinished()
-             && (*threads[3])->isFinished() && (*threads[4])->isFinished())){
-        TCB::yield();
-    }//treba u while jer kada main pozove yield ubacujemo ga u sch
-    //onda moze da se desi da opet njega izaberemo i da nikad ne izvrsimo bodyA i B
-
-    for (auto &thread : threads){
-        delete *thread;
+void checkNullptr(void* p) {
+    static int x = 0;
+    if(p == nullptr) {
+        __putc('?');
+        __putc('0' + x);
     }
-    printString("Finished\n");
+    x++;
+}
+
+void checkStatus(int status) {
+    static int y = 0;
+    if(status) {
+        __putc('0' + y);
+        __putc('?');
+    }
+    y++;
+}
+
+int main() {
+    Riscv::w_stvec((uint64) &Riscv::supervisorTrap);//adresa prekidne rutine u stvec
+    int n = 16;
+    char** matrix = (char**)mem_alloc(n*sizeof(char*));
+    checkNullptr(matrix);
+    for(int i = 0; i < n; i++) {
+        matrix[i] = (char *) mem_alloc(n * sizeof(char));
+        checkNullptr(matrix[i]);
+    }
+
+    for(int i = 0; i < n; i++) {
+        for(int j = 0; j < n; j++) {
+            matrix[i][j] = 'k';
+        }
+    }
+
+    for(int i = 0; i < n; i++) {
+        for(int j = 0; j < n; j++) {
+            __putc(matrix[i][j]);
+            __putc(' ');
+        }
+        __putc('\n');
+    }
+
+
+    for(int i = 0; i < n; i++) {
+        int status = mem_free(matrix[i]);
+        checkStatus(status);
+    }
+    int status = mem_free(matrix);
+    checkStatus(status);
 
     return 0;
 }
-
-
-
