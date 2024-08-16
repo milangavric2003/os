@@ -33,7 +33,7 @@ void workerBodyB(void *arg){
 static uint64 fibonacci(uint64 n)
 {
     if (n == 0 || n == 1) { return n; }
-    if (n % 4 == 0) TCB::yield();
+    if (n % 10 == 0) TCB::yield();
     return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
@@ -58,7 +58,7 @@ void workerBodyC(void *arg) {
     printInteger(t1);
     printString("\n");
 
-    uint64 result = fibonacci(20);
+    uint64 result = fibonacci(12);
     printString("C: fibonaci=");
     printInteger(result);
     printString("\n");
@@ -87,7 +87,7 @@ void workerBodyD(void *arg)
     __asm__ ("li t1, 5");
     TCB::yield();
 
-    uint64 result = fibonacci(23);
+    uint64 result = fibonacci(16);
     printString("D: fibonaci=");
     printInteger(result);
     printString("\n");
