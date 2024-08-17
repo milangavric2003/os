@@ -32,7 +32,7 @@ int main(){
 
     while (!((*threads[1])->isFinished() && (*threads[2])->isFinished()
              && (*threads[3])->isFinished() && (*threads[4])->isFinished())){
-        //thread_dispatch();
+        thread_dispatch();
     }//treba u while jer kada main pozove yield ubacujemo ga u sch
     //onda moze da se desi da opet njega izaberemo i da nikad ne izvrsimo bodyA i B
 

@@ -1,12 +1,12 @@
-#ifndef PROJECT_BASE_V1_1_SEMAPHORE_HPP
-#define PROJECT_BASE_V1_1_SEMAPHORE_HPP
+#ifndef PROJECT_BASE_V1_1_SEMAPHOREPOMOCNI_HPP
+#define PROJECT_BASE_V1_1_SEMAPHOREPOMOCNI_HPP
 
 #include "tcb.hpp"
 
-class Semaphore {
+class SemaphorePomocni {
 public :
-    Semaphore (unsigned short init = 1) : val(init), ret(0) {}
-    ~Semaphore();
+    SemaphorePomocni (unsigned short init = 1) : val(init), ret(0) {}
+    ~SemaphorePomocni();
 
     int wait ();
     void signal ();

@@ -3,7 +3,7 @@
 
 #include "../lib/hw.h"
 #include "tcb.hpp"
-#include "Semaphore.hpp"
+#include "SemaphorePomocni.hpp"
 
 static uint64 constexpr MEM_ALLOC_CODE = 0x1;
 static uint64 constexpr MEM_FREE_CODE = 0x2;
@@ -28,7 +28,7 @@ extern int thread_exit();
 
 extern void thread_dispatch();
 
-typedef Semaphore* sem_t;
+typedef SemaphorePomocni* sem_t;
 
 extern int sem_open (sem_t* handle, unsigned init);
 
@@ -38,5 +38,16 @@ extern int sem_wait (sem_t id);
 
 extern int sem_signal (sem_t id);
 
+extern int sem_timedwait (sem_t id, time_t timeout);
+
+extern int sem_trywait (sem_t id);
+
+extern int time_sleep (time_t);
+
+const int EOF = -1;
+
+extern char getc ();
+
+extern void putc (char);
 
 #endif

@@ -15,14 +15,15 @@ void Riscv::handleSupervisorTrap(){
     //nama od interesa supervisor software interrupt jer on stize od tajmera
     //supervisor external interrupt npr dolazi od konzole itd.
     //dakle kodovi 1 i 9 i interrupt=1
-    if (scause == 0x0000000000000009UL) {//ovde kada neko eksplicitno pozove yield() sinhrono || scause == 0x0000000000000008UL
+    if (scause == 0x0000000000000009UL || scause == 0x0000000000000008UL) {//ovde kada neko eksplicitno pozove yield() sinhrono || scause == 0x0000000000000008UL
         //interrupt: NO, cause code: environment call from S-mode (racunamo da je uvek S-mode a ne U-mode)
+        //or U-mode
         uint64 code;
         __asm__ volatile ("ld %[code], 10 * 8(fp)" : [code] "=r"(code)); //mozda treba ovde sa fp da se skida
 
-        uint64 sepc = r_sepc() + 4;//sve instrukcije 4 bajta => zelimo na prvu sledecu instrukciju tako funkc. ecall
+        uint64 volatile sepc = r_sepc() + 4;//sve instrukcije 4 bajta => zelimo na prvu sledecu instrukciju tako funkc. ecall
         //ima u dokumentaciji
-        uint64 sstatus = r_sstatus();
+        uint64 volatile sstatus = r_sstatus();
         //TCB::timeSliceCounter = 0;
         switch (code) {
             case MEM_ALLOC_CODE:
@@ -67,7 +68,7 @@ void Riscv::handleSupervisorTrap(){
                 unsigned init;
                 __asm__ volatile ("ld %[init], 12 * 8(fp)" : [init] "=r"(init));
 
-                if ((*id = new Semaphore(init)) == nullptr) { //nece moci ovako
+                if ((*id = new SemaphorePomocni(init)) == nullptr) { //nece moci ovako
                     __asm__ volatile ("li a0, -1"); // greska sa alokacijom
                 } else {
                     __asm__ volatile ("li a0, 0");
@@ -107,18 +108,18 @@ void Riscv::handleSupervisorTrap(){
         w_sepc(sepc);//sepc nove niti
     } else if (scause == 0x8000000000000001UL) {
         //interrupt: yes, cause code: supervisor software interrupt (timer)
+        mc_sip(SIP_SSIP);//supervisor interrupt pending = sip; vise nije ovaj supe. software interrupt
         TCB::timeSliceCounter++;
         if (TCB::timeSliceCounter >= TCB::running->getTimeSlice()) {
             //sepc registar bitan kada se pozove sret, zato i njega treba sacuvati
-            uint64 sepc = r_sepc();//sepc stare niti
-            uint64 sstatus = r_sstatus();
+            uint64 volatile sepc = r_sepc();//sepc stare niti
+            uint64 volatile sstatus = r_sstatus();
             TCB::timeSliceCounter = 0;
             TCB::dispatch();//racunamo da niti ovde izlaze kada se izvrsi dispatch (sve su na ovaj nacin sacuvane)
                             //a sta cemo za novo-napravljene niti
             w_sstatus(sstatus);
             w_sepc(sepc);//sepc nove niti
         }
-        mc_sip(SIP_SSIP);//supervisor interrupt pending = sip; vise nije ovaj supe. software interrupt
     } else if (scause == 0x8000000000000009UL) {
         //interrupt: yes, cause code: supervisor external interrupt (console)
         console_handler();//vec je implementirano

@@ -1,6 +1,6 @@
-#include "../h/Semaphore.hpp"
+#include "../h/SemaphorePomocni.hpp"
 
-Semaphore::~Semaphore() {
+SemaphorePomocni::~SemaphorePomocni() {
     while (blocked.peekFirst() != nullptr) {
         TCB* t = blocked.removeFirst();
         Scheduler::put(t);
@@ -8,23 +8,23 @@ Semaphore::~Semaphore() {
     }
 }
 
-int Semaphore::wait () {
+int SemaphorePomocni::wait () {
     if (--val < 0) block();
     return ret;
 }
 
-void Semaphore::signal() {
+void SemaphorePomocni::signal() {
     if (++val <= 0) unblock();
 }
 
-void Semaphore::block() {
+void SemaphorePomocni::block() {
     TCB *old = TCB::running;
     blocked.addLast(old);
     TCB::running = Scheduler::get();
     TCB::contextSwitch(&old->context, &TCB::running->context);
 }
 
-void Semaphore::unblock() {
+void SemaphorePomocni::unblock() {
     TCB* t = blocked.removeFirst();
     Scheduler::put(t);
 }

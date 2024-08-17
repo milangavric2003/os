@@ -1,6 +1,6 @@
 #include "../h/syscall_c.hpp"
 #include "../h/riscv.hpp"
-#include "../lib/mem.h"
+#include "../lib/console.h"
 
 void* mem_alloc (size_t size){
     size = (size + MEM_BLOCK_SIZE - 1 ) / MEM_BLOCK_SIZE;
@@ -99,5 +99,22 @@ int sem_signal (sem_t id) {
     return result;
 }
 
+int sem_timedwait (sem_t id, time_t timeout) {
+    return 0;
+}
 
+int sem_trywait (sem_t id) {
+    return 0;
+}
 
+int time_sleep (time_t) {
+    return 0;
+}
+
+char getc () {
+    return __getc();
+}
+
+void putc (char c) {
+    __putc (c);
+}

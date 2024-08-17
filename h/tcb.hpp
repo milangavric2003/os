@@ -65,7 +65,7 @@ private:
     bool finished;
 
     friend class Riscv;
-    friend class Semaphore;
+    friend class SemaphorePomocni;
 
     static void threadWrapper();//treba nam jer na kraju body-a nema set finished
 
