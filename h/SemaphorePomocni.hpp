@@ -6,11 +6,29 @@
 class SemaphorePomocni {
 public :
     SemaphorePomocni (unsigned short init = 1) : val(init), ret(0) {}
-    ~SemaphorePomocni();
+    //~SemaphorePomocni();
 
     int wait ();
-    void signal ();
-    int value () const { return val; }
+    int signal ();
+    int trywait();
+    //int value () const { return val; }
+    int close();
+
+    void* operator new(size_t size) {
+        return MemoryAllocator::mem_alloc(size);
+    }
+
+    void operator delete(void* ptr) {
+        MemoryAllocator::mem_free(ptr);
+    }
+
+    void* operator new[](size_t size) {
+        return MemoryAllocator::mem_alloc(size);
+    }
+
+    void operator delete[](void* ptr) {
+        MemoryAllocator::mem_free(ptr);
+    }
 
 protected:
     void block ();

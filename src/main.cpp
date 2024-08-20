@@ -1,10 +1,10 @@
-#include "../h/print.hpp"
+
 #include "../h/syscall_c.hpp"
 #include "../h/riscv.hpp"
 #include "../lib/console.h"
-#include "../h/workers.hpp"
+#include "../test/printing.hpp"
 
-
+/*
 int main(){
 
     Riscv::w_stvec((uint64) &Riscv::supervisorTrap);//adresa prekidne rutine u stvec
@@ -42,4 +42,34 @@ int main(){
     printString("Finished\n");
 
     return 0;
+}*/
+
+void userMain();
+
+int main () {
+    /*Riscv::w_stvec((uint64) &Riscv::supervisorTrap);//adresa prekidne rutine u stvec
+    thread_t handleMain;
+    thread_create(&handleMain, nullptr, nullptr);
+    TCB::running = handleMain;
+    userMain();
+    return 0;*/
+
+    TCB *threads[5];
+
+    Riscv::w_stvec((uint64) &Riscv::supervisorTrap);
+    //Riscv::ms_sstatus(Riscv::SSTATUS_SIE);
+    thread_create(&threads[0],nullptr,nullptr);
+    TCB::running = threads[0];
+
+
+    thread_create(&threads[1], reinterpret_cast<void (*)(void *)>(userMain), nullptr);
+
+    while(!threads[1]->isFinished()) {
+        thread_dispatch();
+    }
+
+    printString("Vratio sam se u main\n");
+
+    return 0;
+
 }

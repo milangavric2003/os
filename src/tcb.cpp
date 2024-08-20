@@ -32,6 +32,14 @@ void TCB::dispatch() {
     }
     running = Scheduler::get();
 
+    if(running->body == nullptr) {
+        Riscv::ms_sstatus(Riscv::SSTATUS_SPP);
+    }
+    else {
+        Riscv::mc_sstatus(Riscv::SSTATUS_SPP);
+    }
+
+
     TCB::contextSwitch(&old->context, &running->context);
     // ovde se ne dolazi ako novoizabrana nit -> ona krece sa threadWprapper
 }
@@ -54,5 +62,6 @@ void TCB::threadWrapper() {
 
 int TCB::thread_exit() {
     running->setFinished(true);
+    TCB::dispatch();
     return 0;
 }

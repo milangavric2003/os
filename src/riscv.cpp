@@ -1,7 +1,6 @@
-
 #include "../h/riscv.hpp"
 #include "../lib/console.h"
-#include "../h/MemoryAllocator.hpp"
+#include "../test/printing.hpp"
 
 
 void Riscv::popSppSpie() {
@@ -68,7 +67,7 @@ void Riscv::handleSupervisorTrap(){
                 unsigned init;
                 __asm__ volatile ("ld %[init], 12 * 8(fp)" : [init] "=r"(init));
 
-                if ((*id = new SemaphorePomocni(init)) == nullptr) { //nece moci ovako
+                if ((*id = new SemaphorePomocni(init)) == nullptr) { //nece moci ovako-new!!!!!!!!!!
                     __asm__ volatile ("li a0, -1"); // greska sa alokacijom
                 } else {
                     __asm__ volatile ("li a0, 0");
@@ -84,7 +83,7 @@ void Riscv::handleSupervisorTrap(){
                 } else {
                     __asm__ volatile ("li a0, 0");
                 }*/
-                delete idClose;
+                idClose->close();
                 __asm__ volatile ("sd a0, 10 * 8(fp)"); // a0 na stek, tamo gde je i sacuvano
                 break;
             case SEM_WAIT_CODE:
@@ -100,6 +99,24 @@ void Riscv::handleSupervisorTrap(){
 
                 idSignal->signal();
                 __asm__ volatile ("sd a0, 10 * 8(fp)"); // a0 na stek, tamo gde je i sacuvano
+                break;
+            case SEM_TRYWAIT_CODE:
+                sem_t idTrywait;
+                __asm__ volatile ("ld %[idTrywait], 11 * 8(fp)" : [idTrywait] "=r"(idTrywait));
+
+                idTrywait->trywait();
+                __asm__ volatile ("sd a0, 10 * 8(fp)"); // a0 na stek, tamo gde je i sacuvano
+                break;
+            case GETC_CODE:
+
+                __getc();
+                __asm__ volatile ("sd a0, 10 * 8(fp)"); // a0 na stek, tamo gde je i sacuvano
+                break;
+            case PUTC_CODE:
+                char c;
+                __asm__ volatile ("ld %[c], 11 * 8(fp)" : [c] "=r"(c));
+
+                __putc(c);
                 break;
             default:
                 break;
@@ -125,8 +142,41 @@ void Riscv::handleSupervisorTrap(){
         console_handler();//vec je implementirano
     } else {
         //unexptected trap cause - da vidimo sta je uzrok, gde se desilo i stval - trap value - dodatno opisuje interr.
-        //print(scause)
-        //print(sepc)
-        //print(stval)
+        Riscv::ms_sstatus(Riscv::SSTATUS_SIE);
+        /*printString("ERROR! SCAUSE:");
+        printInt(scause);
+        printString("\n");
+        Riscv::mc_sstatus(Riscv::SSTATUS_SIE);*/
+        __putc('E');__putc('R');__putc('R');__putc('O');__putc('R');__putc('!');__putc('!');
+        __putc(' ');__putc('s');__putc('c');__putc('a');__putc('u');__putc('s');__putc('e');
+        __putc(':');
+
+        char digits[] = "0123456789ABCDEF";
+        int xx = scause;
+        int base = 10;
+        int sgn = 0;
+        char buf[16];
+        int i, neg;
+        uint x;
+
+        neg = 0;
+        if(sgn && xx < 0){
+            neg = 1;
+            x = -xx;
+        } else {
+            x = xx;
+        }
+
+        i = 0;
+        do{
+            buf[i++] = digits[x % base];
+        }while((x /= base) != 0);
+        if(neg)
+            buf[i++] = '-';
+
+        while(--i >= 0)
+            putc(buf[i]);
+
+        __putc('\n');
     }
 }

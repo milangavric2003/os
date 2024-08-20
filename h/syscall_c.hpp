@@ -16,6 +16,11 @@ static uint64 constexpr SEM_CLOSE_CODE = 0x22;
 static uint64 constexpr SEM_WAIT_CODE = 0x23;
 static uint64 constexpr SEM_SIGNAL_CODE = 0x24;
 
+static uint64 constexpr SEM_TRYWAIT_CODE = 0x26;
+
+static uint64 constexpr GETC_CODE = 0x41;
+static uint64 constexpr PUTC_CODE = 0x42;
+
 extern void* mem_alloc (size_t size);
 
 extern int mem_free (void*);

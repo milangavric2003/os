@@ -1,6 +1,5 @@
 #include "../h/syscall_c.hpp"
 #include "../h/riscv.hpp"
-#include "../lib/console.h"
 
 void* mem_alloc (size_t size){
     size = (size + MEM_BLOCK_SIZE - 1 ) / MEM_BLOCK_SIZE;
@@ -104,7 +103,16 @@ int sem_timedwait (sem_t id, time_t timeout) {
 }
 
 int sem_trywait (sem_t id) {
-    return 0;
+    if (id == nullptr) return -2; // handle is nullptr
+    __asm__ volatile ("mv a1, %[id]" : : [id] "r"(id)); // a1 <= id
+    __asm__ volatile ("mv a0, %[SEM_TRYWAIT_CODE]" : : [SEM_TRYWAIT_CODE] "r"(SEM_TRYWAIT_CODE)); // a0 <= SEM_TRYWAIT_CODE
+
+    __asm__ volatile ("ecall"); // ovo vodi u prekidnu rutinu
+
+    int result;
+    __asm__ volatile ("mv %[result], a0" : [result] "=r"(result)); // result <= a0
+
+    return result;
 }
 
 int time_sleep (time_t) {
@@ -112,9 +120,20 @@ int time_sleep (time_t) {
 }
 
 char getc () {
-    return __getc();
+    __asm__ volatile ("mv a0, %[GETC_CODE]" : : [GETC_CODE] "r"(GETC_CODE)); // a0 <= GETC_CODE
+
+    __asm__ volatile ("ecall"); // ovo vodi u prekidnu rutinu
+
+    char result;
+    __asm__ volatile ("mv %[result], a0" : [result] "=r"(result)); // result <= a0
+
+    return result;
 }
 
 void putc (char c) {
-    __putc (c);
+    __asm__ volatile ("mv a1, %[c]" : : [c] "r"(c)); // a1 <= c
+    __asm__ volatile ("mv a0, %[PUTC_CODE]" : : [PUTC_CODE] "r"(PUTC_CODE)); // a0 <= PUTC_CODE
+
+    __asm__ volatile ("ecall"); // ovo vodi u prekidnu rutinu
+
 }
