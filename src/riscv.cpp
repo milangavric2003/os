@@ -132,7 +132,7 @@ void Riscv::handleSupervisorTrap(){
             uint64 volatile sepc = r_sepc();//sepc stare niti
             uint64 volatile sstatus = r_sstatus();
             TCB::timeSliceCounter = 0;
-            TCB::dispatch();//racunamo da niti ovde izlaze kada se izvrsi dispatch (sve su na ovaj nacin sacuvane)
+            //TCB::dispatch();//racunamo da niti ovde izlaze kada se izvrsi dispatch (sve su na ovaj nacin sacuvane)
                             //a sta cemo za novo-napravljene niti
             w_sstatus(sstatus);
             w_sepc(sepc);//sepc nove niti
@@ -142,41 +142,10 @@ void Riscv::handleSupervisorTrap(){
         console_handler();//vec je implementirano
     } else {
         //unexptected trap cause - da vidimo sta je uzrok, gde se desilo i stval - trap value - dodatno opisuje interr.
-        Riscv::ms_sstatus(Riscv::SSTATUS_SIE);
-        /*printString("ERROR! SCAUSE:");
+        //Riscv::ms_sstatus(Riscv::SSTATUS_SIE);
+        printString("ERROR!!! scause: ");
         printInt(scause);
         printString("\n");
-        Riscv::mc_sstatus(Riscv::SSTATUS_SIE);*/
-        __putc('E');__putc('R');__putc('R');__putc('O');__putc('R');__putc('!');__putc('!');
-        __putc(' ');__putc('s');__putc('c');__putc('a');__putc('u');__putc('s');__putc('e');
-        __putc(':');
-
-        char digits[] = "0123456789ABCDEF";
-        int xx = scause;
-        int base = 10;
-        int sgn = 0;
-        char buf[16];
-        int i, neg;
-        uint x;
-
-        neg = 0;
-        if(sgn && xx < 0){
-            neg = 1;
-            x = -xx;
-        } else {
-            x = xx;
-        }
-
-        i = 0;
-        do{
-            buf[i++] = digits[x % base];
-        }while((x /= base) != 0);
-        if(neg)
-            buf[i++] = '-';
-
-        while(--i >= 0)
-            putc(buf[i]);
-
-        __putc('\n');
+        //Riscv::mc_sstatus(Riscv::SSTATUS_SIE);
     }
 }

@@ -4,7 +4,6 @@
 
 #include "../h/tcb.hpp"
 #include "../h/riscv.hpp"
-#include "../h/scheduler.hpp"
 
 //extern "C" void pushRegisters();
 //moze ovo gore bez name mangling
