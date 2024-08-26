@@ -15,8 +15,10 @@ static uint64 constexpr SEM_OPEN_CODE = 0x21;
 static uint64 constexpr SEM_CLOSE_CODE = 0x22;
 static uint64 constexpr SEM_WAIT_CODE = 0x23;
 static uint64 constexpr SEM_SIGNAL_CODE = 0x24;
-
 static uint64 constexpr SEM_TRYWAIT_CODE = 0x26;
+
+static uint64 constexpr SEM_TIMEDWAIT_CODE = 0x25;
+static uint64 constexpr TIME_SLEEP_CODE = 0x31;
 
 static uint64 constexpr GETC_CODE = 0x41;
 static uint64 constexpr PUTC_CODE = 0x42;

@@ -12,6 +12,12 @@ int SemaphorePomocni::trywait() {
     else return 0;
 }
 
+int SemaphorePomocni::timedwait(time_t timeout) {
+    if (ret != 0) return ret;
+    if (--val < 0) TCB::time_sleep(timeout);
+    return ret;
+}
+
 int SemaphorePomocni::signal() {
     if (ret != 0) return ret;
     if (++val <= 0) unblock();
@@ -26,7 +32,7 @@ void SemaphorePomocni::block() {
 }
 
 void SemaphorePomocni::unblock() {
-    TCB* t = blocked.removeFirst();
+    TCB* t = blocked.removeFirst(); // t can be null if blocked list is empty
     Scheduler::put(t);
 }
 
@@ -36,8 +42,9 @@ int SemaphorePomocni::close() {
         TCB* t = blocked.removeFirst();
         Scheduler::put(t);
     }
-    ret = -1; // wait() will return this error code
+    ret = SEMDEAD; // wait() will return this error code
     return 0;
 }
+
 
 

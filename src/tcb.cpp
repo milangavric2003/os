@@ -12,6 +12,8 @@ TCB* TCB::running = nullptr;
 
 uint64 TCB::timeSliceCounter = 0;
 
+List<TCB> TCB::blockedList;
+
 void TCB::yield() {
     /*Riscv::pushRegisters();
 
@@ -26,18 +28,10 @@ void TCB::yield() {
 
 void TCB::dispatch() {
     TCB *old = running;
-    if (!old->isFinished()) {
+    if (!old->isFinished() && !old->blocked) {
         Scheduler::put(old);
     }
     running = Scheduler::get();
-
-    if(running->body == nullptr) {
-        Riscv::ms_sstatus(Riscv::SSTATUS_SPP);
-    }
-    else {
-        Riscv::mc_sstatus(Riscv::SSTATUS_SPP);
-    }
-
 
     TCB::contextSwitch(&old->context, &running->context);
     // ovde se ne dolazi ako novoizabrana nit -> ona krece sa threadWprapper
@@ -63,4 +57,56 @@ int TCB::thread_exit() {
     running->setFinished(true);
     TCB::dispatch();
     return 0;
+}
+
+int TCB::time_sleep(time_t sleep_duration) {
+    if (running->blocked) return -1; // already blocked, must be some error
+    if (sleep_duration == 0) return 0; // no need to sleep
+    running->blocked = true;
+
+    time_t accumulated_time = 0;
+    for (TCB* elem = blockedList.peekFirst(); elem != nullptr; elem = blockedList.peekNext()) {
+        accumulated_time += elem->timeSleepCounter;
+        if (accumulated_time > sleep_duration) {
+            running->timeSleepCounter = sleep_duration - (accumulated_time - elem->timeSleepCounter);
+            elem->timeSleepCounter -= running->timeSleepCounter;
+            blockedList.addBefore(running, elem);
+            TCB::dispatch();
+            return 0;
+        } else if (accumulated_time == sleep_duration) {
+            // Insert after the current element since they have the same wake-up time
+            running->timeSleepCounter = 0;
+
+            // Special case: Insert newElem right after elem
+            TCB* nextElem = blockedList.peekNext();
+            if (nextElem) {
+                blockedList.addBefore(running, nextElem);
+            } else {
+                // If elem is the last element, just add it to the end
+                blockedList.addLast(running);
+            }
+            TCB::dispatch();
+            return 0;
+        }
+    }
+
+    // If the new element should be the last one
+    running->timeSleepCounter = sleep_duration - accumulated_time;
+    blockedList.addLast(running);
+
+    TCB::dispatch();
+    return 0;
+
+}
+
+void TCB::timer_tick() {
+    if (TCB *firstElem = blockedList.peekFirst()) {
+        firstElem->timeSleepCounter--;
+        while (firstElem && firstElem->timeSleepCounter <= 0) {
+            blockedList.removeFirst();
+            firstElem->blocked = false;
+            Scheduler::put(firstElem);
+            firstElem = blockedList.peekFirst();
+        }
+    }
 }

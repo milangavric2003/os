@@ -48,6 +48,8 @@ public:
 
     static TCB *running;
 
+    static int time_sleep(time_t time);
+
 private:
     explicit TCB(TCB** handle, Body body, void* arg, void *stack_space, uint64 timeSlice) :
         handle (handle), arg(arg), body(body), stack(body != nullptr ? (uint8*)stack_space : nullptr),
@@ -55,7 +57,8 @@ private:
             body != nullptr ? (uint64) &threadWrapper : 0,
             stack != nullptr ? (uint64) &stack[DEFAULT_STACK_SIZE] : 0
         }),
-        timeSlice(timeSlice), finished(false){
+        timeSlice(timeSlice), finished(false),
+        blocked(false), timeSleepCounter(0) {
 
         if (body != nullptr) Scheduler::put(this); //ako body = nullptr onda je to main korutina, ne treba je u sch
     }
@@ -71,6 +74,11 @@ private:
     Context context;
     uint64 timeSlice;
     bool finished;
+
+    bool blocked;
+    static List<TCB> blockedList;
+    time_t timeSleepCounter;
+    static void timer_tick();
 
     friend class Riscv;
     friend class SemaphorePomocni;

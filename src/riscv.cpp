@@ -4,6 +4,12 @@
 
 
 void Riscv::popSppSpie() {
+    if(TCB::running->body == nullptr) {
+        Riscv::ms_sstatus(Riscv::SSTATUS_SPP);
+    }
+    else {
+        Riscv::mc_sstatus(Riscv::SSTATUS_SPP);
+    }
     __asm__ volatile ("csrw sepc, ra");
     __asm__ volatile ("sret");//jer se sad iz prekidne rutine ne izlazi putem handleSupervisorTrap
 }
@@ -107,6 +113,15 @@ void Riscv::handleSupervisorTrap(){
                 idTrywait->trywait();
                 __asm__ volatile ("sd a0, 10 * 8(fp)"); // a0 na stek, tamo gde je i sacuvano
                 break;
+            case SEM_TIMEDWAIT_CODE:
+                sem_t idTimedwait;
+                __asm__ volatile ("ld %[idTimedwait], 11 * 8(fp)" : [idTimedwait] "=r"(idTimedwait));
+                time_t timeout;
+                __asm__ volatile ("ld %[timeout], 12 * 8(fp)" : [timeout] "=r"(timeout));
+
+                idTimedwait->timedwait(timeout);
+                __asm__ volatile ("sd a0, 10 * 8(fp)"); // a0 na stek, tamo gde je i sacuvano
+                break;
             case GETC_CODE:
 
                 __getc();
@@ -118,6 +133,13 @@ void Riscv::handleSupervisorTrap(){
 
                 __putc(c);
                 break;
+            case TIME_SLEEP_CODE:
+                time_t time;
+                __asm__ volatile ("ld %[time], 11 * 8(fp)" : [time] "=r"(time));
+
+                TCB::time_sleep(time);
+                __asm__ volatile ("sd a0, 10 * 8(fp)"); // a0 na stek, tamo gde je i sacuvano
+                break;
             default:
                 break;
         }
@@ -125,6 +147,9 @@ void Riscv::handleSupervisorTrap(){
         w_sepc(sepc);//sepc nove niti
     } else if (scause == 0x8000000000000001UL) {
         //interrupt: yes, cause code: supervisor software interrupt (timer)
+
+        TCB::timer_tick();
+
         mc_sip(SIP_SSIP);//supervisor interrupt pending = sip; vise nije ovaj supe. software interrupt
         TCB::timeSliceCounter++;
         if (TCB::timeSliceCounter >= TCB::running->getTimeSlice()) {
@@ -132,7 +157,7 @@ void Riscv::handleSupervisorTrap(){
             uint64 volatile sepc = r_sepc();//sepc stare niti
             uint64 volatile sstatus = r_sstatus();
             TCB::timeSliceCounter = 0;
-            //TCB::dispatch();//racunamo da niti ovde izlaze kada se izvrsi dispatch (sve su na ovaj nacin sacuvane)
+            TCB::dispatch();//racunamo da niti ovde izlaze kada se izvrsi dispatch (sve su na ovaj nacin sacuvane)
                             //a sta cemo za novo-napravljene niti
             w_sstatus(sstatus);
             w_sepc(sepc);//sepc nove niti

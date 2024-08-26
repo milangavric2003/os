@@ -25,7 +25,7 @@
 // TEST 5 (zadatak 4., thread_sleep test C API)
 #include "../test/ThreadSleep_C_API_test.hpp"
 // TEST 6 (zadatak 4. CPP API i asinhrona promena konteksta)
-//#include "../test/ConsumerProducer_CPP_API_test.hpp"
+#include "../test/ConsumerProducer_CPP_API_test.hpp"
 #include "System_Mode_test.hpp"
 
 #endif
@@ -89,7 +89,7 @@ void userMain() {
             break;
         case 6:
 #if LEVEL_4_IMPLEMENTED == 1
-            //testConsumerProducer();
+            testConsumerProducer();
             printString("TEST 6 (zadatak 4. CPP API i asinhrona promena konteksta)\n");
 #endif
             break;

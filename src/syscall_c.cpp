@@ -99,7 +99,17 @@ int sem_signal (sem_t id) {
 }
 
 int sem_timedwait (sem_t id, time_t timeout) {
-    return 0;
+    if (id == nullptr) return -2; // handle is nullptr
+    __asm__ volatile ("mv a2, %[timeout]" : : [timeout] "r"(timeout)); // a2 <= timeout
+    __asm__ volatile ("mv a1, %[id]" : : [id] "r"(id)); // a1 <= id
+    __asm__ volatile ("mv a0, %[SEM_TIMEDWAIT_CODE]" : : [SEM_TIMEDWAIT_CODE] "r"(SEM_TIMEDWAIT_CODE)); // a0 <= SEM_TIMEDWAIT_CODE
+
+    __asm__ volatile ("ecall"); // ovo vodi u prekidnu rutinu
+
+    int result;
+    __asm__ volatile ("mv %[result], a0" : [result] "=r"(result)); // result <= a0
+
+    return result;
 }
 
 int sem_trywait (sem_t id) {
@@ -115,8 +125,16 @@ int sem_trywait (sem_t id) {
     return result;
 }
 
-int time_sleep (time_t) {
-    return 0;
+int time_sleep (time_t time) {
+    __asm__ volatile ("mv a1, %[time]" : : [time] "r"(time)); // a1 <= time
+    __asm__ volatile ("mv a0, %[TIME_SLEEP_CODE]" : : [TIME_SLEEP_CODE] "r"(TIME_SLEEP_CODE)); // a0 <= TIME_SLEEP_CODE
+
+    __asm__ volatile ("ecall"); // ovo vodi u prekidnu rutinu
+
+    int result;
+    __asm__ volatile ("mv %[result], a0" : [result] "=r"(result)); // result <= a0
+
+    return result;
 }
 
 char getc () {

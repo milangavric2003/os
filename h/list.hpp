@@ -19,12 +19,21 @@ class List {
             void operator delete(void* ptr) {
                 MemoryAllocator::mem_free(ptr);
             }
+
+            void* operator new[](size_t size) {
+                return MemoryAllocator::mem_alloc(size);
+            }
+
+            void operator delete[](void* ptr) {
+                MemoryAllocator::mem_free(ptr);
+            }
         };
 
         Elem *head, *tail;
+        Elem *temp;
 
         public:
-        List() : head(0), tail(0) {}
+        List() : head(0), tail(0), temp(0) {}
 
         List(const List<T> &) = delete;
 
@@ -102,7 +111,7 @@ class List {
             Elem *curr = head;
 
             while (curr != nullptr) {
-                if (*(curr->data) == *(toBeRemoved)) {
+                if (curr->data == toBeRemoved) {
                     // Element found, remove it
                     if (prev) {
                         prev->next = curr->next;
@@ -124,6 +133,38 @@ class List {
             }
 
             return nullptr; // Element not found
+        }
+
+        T* peekNext() {
+            if (temp == nullptr) temp = head;
+            if (temp && temp->next) {
+                temp = temp->next;
+                return temp->data;
+            }
+            temp = nullptr;
+            return nullptr;
+        }
+
+        void addBefore(T* toAdd, T* beforeThis) {
+            if (!head) return; // List is empty
+
+            Elem *elem = new Elem(toAdd, 0);
+            Elem *prev = nullptr;
+            Elem *curr = head;
+
+            while (curr != nullptr) {
+                if (curr->data == beforeThis) {
+                    // Element found, add before it
+                    elem->next = curr;
+                    if (!prev) {
+                        head = elem;
+                    } else {
+                        prev->next = elem;
+                    }
+                }
+                prev = curr;
+                curr = curr->next;
+            }
         }
 
 };

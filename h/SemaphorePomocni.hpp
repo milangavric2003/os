@@ -11,6 +11,7 @@ public :
     int wait ();
     int signal ();
     int trywait();
+    int timedwait(time_t);
     //int value () const { return val; }
     int close();
 
@@ -38,6 +39,8 @@ private :
     int val;
     List<TCB> blocked;
     int ret;
+    static int constexpr SEMDEAD = -1;
+    static int constexpr TIMEOUT = -2;
 } ;
 
 #endif
