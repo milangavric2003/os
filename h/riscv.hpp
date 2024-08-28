@@ -3,10 +3,16 @@
 
 #include "../lib/hw.h"
 #include "../h/syscall_c.hpp"
+#include "BufferPomocni.hpp"
 
 class Riscv
 {
 public:
+
+    static BufferPomocni* outputBuffer;
+    static BufferPomocni* inputBuffer;
+
+    static void outThrBody(void*);
 
     //exit running thread
     static int thread_exit();
@@ -202,5 +208,6 @@ inline uint64 Riscv::r_sstatus() {
 inline void Riscv::w_sstatus(uint64 sstatus) {
     __asm__ volatile ("csrw sstatus, %[sstatus]" : : [sstatus] "r"(sstatus));
 }
+
 
 #endif

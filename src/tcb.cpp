@@ -65,6 +65,8 @@ int TCB::time_sleep(time_t sleep_duration) {
     running->blocked = true;
 
     time_t accumulated_time = 0;
+
+    blockedList.resetTemp();
     for (TCB* elem = blockedList.peekFirst(); elem != nullptr; elem = blockedList.peekNext()) {
         accumulated_time += elem->timeSleepCounter;
         if (accumulated_time > sleep_duration) {
@@ -96,13 +98,12 @@ int TCB::time_sleep(time_t sleep_duration) {
 
     TCB::dispatch();
     return 0;
-
 }
 
 void TCB::timer_tick() {
     if (TCB *firstElem = blockedList.peekFirst()) {
         firstElem->timeSleepCounter--;
-        while (firstElem && firstElem->timeSleepCounter <= 0) {
+        while (firstElem && firstElem->timeSleepCounter == 0) {
             blockedList.removeFirst();
             firstElem->blocked = false;
             Scheduler::put(firstElem);

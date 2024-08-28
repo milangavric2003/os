@@ -145,10 +145,14 @@ class List {
             return nullptr;
         }
 
+        void resetTemp() {
+            temp = nullptr;
+        }
+
         void addBefore(T* toAdd, T* beforeThis) {
             if (!head) return; // List is empty
 
-            Elem *elem = new Elem(toAdd, 0);
+            Elem *elem = new Elem(toAdd, nullptr);
             Elem *prev = nullptr;
             Elem *curr = head;
 
@@ -161,10 +165,13 @@ class List {
                     } else {
                         prev->next = elem;
                     }
+                    return;
                 }
                 prev = curr;
                 curr = curr->next;
             }
+
+            delete elem;
         }
 
 };

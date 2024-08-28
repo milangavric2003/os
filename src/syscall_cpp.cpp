@@ -65,3 +65,17 @@ char Console::getc() {
 void Console::putc(char c) {
     PROJECT_BASE_V1_1_SYSCALL_HPP::putc(c);
 }
+
+
+PeriodicThread::PeriodicThread(time_t period) : period(period), flag(true) {}
+
+void PeriodicThread::terminate() {
+    flag = false;
+}
+
+void PeriodicThread::run () {
+    while (flag) {
+        periodicActivation();
+        time_sleep(period);
+    }
+}

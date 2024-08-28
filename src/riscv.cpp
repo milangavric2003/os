@@ -2,9 +2,19 @@
 #include "../lib/console.h"
 #include "../test/printing.hpp"
 
+BufferPomocni* Riscv::inputBuffer = nullptr;
+BufferPomocni* Riscv::outputBuffer = nullptr;
+
+void Riscv::outThrBody(void* arg) {
+    while (true) {
+        while (CONSOLE_TX_STATUS_BIT & *((char*)CONSOLE_STATUS)) {
+            *(char*)CONSOLE_TX_DATA = outputBuffer->get();
+        }
+    }
+}
 
 void Riscv::popSppSpie() {
-    if(TCB::running->body == nullptr) {
+    if(TCB::running->body == nullptr || TCB::running->body == &outThrBody) {
         Riscv::ms_sstatus(Riscv::SSTATUS_SPP);
     }
     else {
@@ -124,14 +134,16 @@ void Riscv::handleSupervisorTrap(){
                 break;
             case GETC_CODE:
 
-                __getc();
+                inputBuffer->get();
+                //__getc();
                 __asm__ volatile ("sd a0, 10 * 8(fp)"); // a0 na stek, tamo gde je i sacuvano
                 break;
             case PUTC_CODE:
                 char c;
                 __asm__ volatile ("ld %[c], 11 * 8(fp)" : [c] "=r"(c));
 
-                __putc(c);
+                outputBuffer->put(c);
+                //__putc(c);
                 break;
             case TIME_SLEEP_CODE:
                 time_t time;
@@ -164,13 +176,23 @@ void Riscv::handleSupervisorTrap(){
         }
     } else if (scause == 0x8000000000000009UL) {
         //interrupt: yes, cause code: supervisor external interrupt (console)
-        console_handler();//vec je implementirano
+        int irq = plic_claim();
+
+        while (CONSOLE_RX_STATUS_BIT & *((char*)CONSOLE_STATUS)) {
+            inputBuffer->put(*(char*)CONSOLE_RX_DATA);
+        }
+        //console_handler();//vec je implementirano
+
+        plic_complete(irq);
     } else {
         //unexptected trap cause - da vidimo sta je uzrok, gde se desilo i stval - trap value - dodatno opisuje interr.
         //Riscv::ms_sstatus(Riscv::SSTATUS_SIE);
-        printString("ERROR!!! scause: ");
-        printInt(scause);
-        printString("\n");
+        while (true) {
+            printString("ERROR!!! scause: ");
+            printInt(scause);
+            printString("\n");
+        }
+        //while(true)TCB::dispatch();
         //Riscv::mc_sstatus(Riscv::SSTATUS_SIE);
     }
 }
