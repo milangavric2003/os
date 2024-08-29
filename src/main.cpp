@@ -5,6 +5,7 @@
 void userMain();
 
 int main () {
+
     Riscv::w_stvec((uint64) &Riscv::supervisorTrap);
 
     Riscv::inputBuffer = new BufferPomocni;
@@ -35,3 +36,4 @@ int main () {
     return 0;
 
 }
+

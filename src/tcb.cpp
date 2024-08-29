@@ -107,6 +107,10 @@ void TCB::timer_tick() {
             blockedList.removeFirst();
             firstElem->blocked = false;
             Scheduler::put(firstElem);
+            // If it waits on semaphore (timedwait)
+            if (firstElem->semTimedWait) {
+                firstElem->timedWaitTimerWaken = true;
+            }
             firstElem = blockedList.peekFirst();
         }
     }

@@ -9,6 +9,8 @@
 #include "scheduler.hpp"
 #include "MemoryAllocator.hpp"
 
+class SemaphorePomocni;
+
 //Thread Control Block
 class TCB {
 public:
@@ -58,7 +60,7 @@ private:
             stack != nullptr ? (uint64) &stack[DEFAULT_STACK_SIZE] : 0
         }),
         timeSlice(timeSlice), finished(false),
-        blocked(false), timeSleepCounter(0) {
+        blocked(false), timeSleepCounter(0), semTimedWait(nullptr), timedWaitTimerWaken(false) {
 
         if (body != nullptr) Scheduler::put(this); //ako body = nullptr onda je to main korutina, ne treba je u sch
     }
@@ -79,6 +81,9 @@ private:
     static List<TCB> blockedList;
     time_t timeSleepCounter;
     static void timer_tick();
+
+    SemaphorePomocni* semTimedWait;
+    bool timedWaitTimerWaken;
 
     friend class Riscv;
     friend class SemaphorePomocni;

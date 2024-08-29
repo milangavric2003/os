@@ -41,6 +41,7 @@ private :
     int ret;
     static int constexpr SEMDEAD = -1;
     static int constexpr TIMEOUT = -2;
+    static int constexpr SIGNAL_ERROR = -3;
 } ;
 
 #endif
