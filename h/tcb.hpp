@@ -98,6 +98,8 @@ private:
 
     //static uint64 constexpr DEFAULT_STACK_SIZE = 1024; 4096
     //static uint64 constexpr DEFAULT_TIME_SLICE = 2;
+
+    static void setSemaphore(SemaphorePomocni* newSemaphore);
 };
 
 

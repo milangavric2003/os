@@ -15,8 +15,10 @@ int SemaphorePomocni::trywait() {
 int SemaphorePomocni::timedwait(time_t timeout) {
     if (ret != 0) return ret;
     if (--val < 0) {
+        //TCB* volatile running = TCB::running;
         int ret1 = 0; // so I can firstly set sem = nullptr, timedWaitWaken = 0
-        TCB::running->semTimedWait = this;
+        //TCB::running->semTimedWait = this;
+        TCB::setSemaphore(this); // So that compiler wouldn't make optimization
         TCB::time_sleep(timeout);
 
         if (TCB::running->timedWaitTimerWaken) {
@@ -37,12 +39,19 @@ int SemaphorePomocni::signal() {
         if (blocked.peekFirst() != nullptr) unblock();
         else if (TCB::blockedList.peekFirst()) {
             TCB::blockedList.resetTemp();
-            for (TCB* elem = TCB::blockedList.peekFirst(); elem != nullptr; elem = TCB::blockedList.peekNext()) {
-                if (elem->semTimedWait) {
+            TCB* newElem = nullptr;
+            for (TCB* elem = TCB::blockedList.peekFirst(); elem != nullptr; ) {
+                newElem = TCB::blockedList.peekNext();
+                if (elem->semTimedWait == this) {
+                    if (newElem) {
+                        newElem->timeSleepCounter += elem->timeSleepCounter;
+                    }
                     TCB::blockedList.remove(elem);
                     elem->blocked = false;
                     Scheduler::put(elem);
+
                 }
+                elem = newElem;
             }
         }
         else return SIGNAL_ERROR;

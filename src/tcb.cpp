@@ -115,3 +115,7 @@ void TCB::timer_tick() {
         }
     }
 }
+
+void TCB::setSemaphore(SemaphorePomocni *newSemaphore) {
+    TCB::running->semTimedWait = newSemaphore;
+}

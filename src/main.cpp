@@ -33,7 +33,12 @@ int main () {
     delete Riscv::inputBuffer;
     delete Riscv::outputBuffer;
 
+    __asm__ volatile ("li t0, 0x5555"); // t0 <= 0x5555
+    __asm__ volatile ("li t1, 0x100000"); // t1 <= 0x100 000
+    __asm__ volatile ("sw t0, 0(t1)"); // *t1 <= t0
+
     return 0;
 
 }
+
 

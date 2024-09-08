@@ -187,11 +187,19 @@ void Riscv::handleSupervisorTrap(){
     } else {
         //unexptected trap cause - da vidimo sta je uzrok, gde se desilo i stval - trap value - dodatno opisuje interr.
         //Riscv::ms_sstatus(Riscv::SSTATUS_SIE);
-        while (true) {
+        //while (true) {
             printString("ERROR!!! scause: ");
             printInt(scause);
             printString("\n");
-        }
+
+            while(Riscv::outputBuffer->getCnt() > 0) {
+                thread_dispatch();
+            }
+            __asm__ volatile ("li t0, 0x5555"); // t0 <= 0x5555
+            __asm__ volatile ("li t1, 0x100000"); // t1 <= 0x100 000
+            __asm__ volatile ("sw t0, 0(t1)"); // *t1 <= t0
+
+        //}
         //while(true)TCB::dispatch();
         //Riscv::mc_sstatus(Riscv::SSTATUS_SIE);
     }
